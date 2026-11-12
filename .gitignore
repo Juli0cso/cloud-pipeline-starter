@@ -1,0 +1,11 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.env
+*.db
+*.pem
+*.key
+
+# arquivos de apoio locais (nao versionar)
+*.patch
+_GUIA_ENTREGA.md

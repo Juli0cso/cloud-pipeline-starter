@@ -1,0 +1,44 @@
+name: CD - deploy EC2
+on:
+  workflow_run:
+    workflows: ["CI - tests and image"]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  deploy:
+    # Only successful CI runs started by pushes to main.
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Set up SSH credentials and verify host identity
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_KEY" && test -n "$KNOWN_HOSTS"
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+      - name: Deploy immutable image
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ vars.EC2_USER }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:${DEPLOY_SHA}"
+          test -n "$EC2_HOST" && test -n "$EC2_USER"
+          # Expected values are host/user, not arbitrary SSH options.
+          [[ "$EC2_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          [[ "$EC2_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "${EC2_USER}@${EC2_HOST}"             "bash -s -- '${IMAGE}'" < scripts/deploy.sh
+      - name: Verify remote endpoint
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: curl --fail --show-error --retry 10 --retry-delay 3 "http://${EC2_HOST}/health"

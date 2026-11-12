@@ -1,0 +1,12 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8000"
+    environment:
+      DB_PATH: /data/tasks.db
+    volumes:
+      - task_data:/data
+    restart: unless-stopped
+volumes:
+  task_data:
