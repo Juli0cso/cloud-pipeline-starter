@@ -3,7 +3,7 @@
 ## 1. Integrantes e distribuição de tarefas
 | Nome | Matrícula | Responsabilidades |
 |---|---|---|
-| Júlio César Sousa | _preencher_ | Trabalho individual: repositório, CI, infraestrutura EC2, CD, endpoints/testes, relatório |
+| Júlio César Sousa Oliveira | 22308014 | Trabalho individual: repositório, CI, infraestrutura EC2, CD, endpoints/testes, relatório |
 
 ## 2. Links
 | Item | Link |
@@ -13,8 +13,13 @@
 | Pull Request | https://github.com/Juli0cso/cloud-pipeline-starter/pull/1 |
 | CI no PR (testes + build, sem publicar) | https://github.com/Juli0cso/cloud-pipeline-starter/actions/runs/43231358141 |
 | CI na main (publicação GHCR) | https://github.com/Juli0cso/cloud-pipeline-starter/actions/runs/43231693591 |
-| CD aprovado | https://github.com/Juli0cso/cloud-pipeline-starter/actions/runs/43231839786 |
-| Imagem implantada | `ghcr.io/juli0cso/cloud-pipeline-starter:ae06394649cb1a46b85791a3aceaffcad8510f30` |
+| CD aprovado (1º deploy, PR #1) | https://github.com/Juli0cso/cloud-pipeline-starter/actions/runs/43231839786 |
+| Imagem do 1º deploy | `ghcr.io/juli0cso/cloud-pipeline-starter:ae06394649cb1a46b85791a3aceaffcad8510f30` |
+| Pull Request #2 (nova versão) | https://github.com/Juli0cso/cloud-pipeline-starter/pull/2 |
+| CI no PR #2 | https://github.com/Juli0cso/cloud-pipeline-starter/actions/runs/43233094546 |
+| CI na main (PR #2) | https://github.com/Juli0cso/cloud-pipeline-starter/actions/runs/43233291379 |
+| CD aprovado (2º deploy, PR #2) | https://github.com/Juli0cso/cloud-pipeline-starter/actions/runs/43233444945 |
+| Imagem do 2º deploy | `ghcr.io/juli0cso/cloud-pipeline-starter:cd84c01758efeaef5fd12ba824ac0650ace8d3fb` |
 
 ## 3. Arquitetura
 ```mermaid
@@ -90,12 +95,42 @@ cloud-tasks-api Up 4 seconds
 ```
 O contêiner foi destruído e recriado e a tarefa continuou existindo, pois o banco SQLite fica no volume `cloud-tasks-data`, fora do ciclo de vida do contêiner. Captura: `docs/evidencias/persistencia.png`.
 
+A persistência também se manteve através de uma **troca de versão pelo CD** (merge do PR #2): o contêiner foi recriado com a nova imagem e a tarefa continuou lá.
+```
+{"status":"ok"}
+{"version":"cd84c01758efeaef5fd12ba824ac0650ace8d3fb"}
+[{"done":false,"id":1,"title":"teste persistencia"}]
+cloud-tasks-api ghcr.io/juli0cso/cloud-pipeline-starter:cd84c01758efeaef5fd12ba824ac0650ace8d3fb Up 57 seconds
+```
+Captura: `docs/evidencias/segundo-deploy.png`.
+
 ## 8. Evidências
-- PR #1 com CI verde e revisão: link acima
-- Runs de CI (PR e main) e CD verdes: links acima
-- `/health` → `{"status":"ok"}`; `/version` → `{"version":"ae06394649cb1a46b85791a3aceaffcad8510f30"}`
-- Segundo deploy: PR #2 (documentação) — `/version` passa a mostrar o novo SHA
-- _[inserir prints: PR, Actions, pacote GHCR, Security Group, /health no navegador]_
+Capturas em `docs/evidencias/` (12/11/2026):
+
+**Runs do GitHub Actions** — CIs de PR (sem publicar), CIs da main (publicação) e CDs; o CD #1 falhou com o workflow SSH original e foi corrigido no PR #1.
+![Actions](evidencias/01-actions-runs.jpg)
+
+**PR #1 integrado** e **auto-revisão + merge com 2 checks aprovados**
+![PR #1](evidencias/02-pr1-merged.jpg)
+![Revisão e merge](evidencias/03-pr1-revisao-e-merge.jpg)
+
+**CD no runner da EC2** — `docker pull` da imagem pelo SHA e verificação de `/health` e `/version`
+![Deploy](evidencias/04-cd-deploy-log.jpg)
+![Health e versão](evidencias/05-cd-health-version.jpg)
+
+**GHCR** — imagens versionadas pelo SHA completo de cada commit da main
+![GHCR](evidencias/06-ghcr-versoes-sha.jpg)
+
+**Runner auto-hospedado** `ec2-cloud-tasks` (labels self-hosted, Linux, X64, ec2) online
+![Runner](evidencias/07-runner-ec2.jpg)
+
+**Security Group** `cloud-tasks-sg` — única regra de entrada: TCP 80 (sem porta 22)
+![Security Group](evidencias/08-security-group.jpg)
+
+**Instância EC2** `cloud-tasks-api` em execução (t3.micro, IP 3.95.57.206, função LabRole)
+![EC2](evidencias/09-instancia-ec2.jpg)
+
+**Persistência** após recriar o contêiner e após o 2º deploy: ver seção 7.
 
 ## 9. Custos e encerramento
 | Recurso | Preço de referência (us-east-1, sob demanda) | Observação |
@@ -105,7 +140,7 @@ O contêiner foi destruído e recriado e a tarefa continuou existindo, pois o ba
 | IPv4 público | ~US$ 0,005/h | enquanto alocado |
 | GHCR (pacote público) | gratuito | |
 
-Gasto registrado no Learner Lab: crédito usado ~US$ 0,40 de US$ 50 no início do trabalho (_atualizar no final_). O Learner Lab desliga a instância ao fim de cada sessão de 4 h.
+Gasto registrado no Learner Lab em 12/11/2026, após os dois deploys: **US$ 0,4 de US$ 50** (`docs/evidencias/10-learner-lab-custo.jpg`). _Atualizar no encerramento._ O Learner Lab desliga a instância ao fim de cada sessão de 4 h.
 
 **Encerramento (após a apresentação):** terminar a instância `i-0c813c3c1f54eeba0` (EBS com *DeleteOnTermination*), excluir o Security Group `cloud-tasks-sg`, remover o runner em *Settings → Actions → Runners*. _[print do console sem recursos]_
 
