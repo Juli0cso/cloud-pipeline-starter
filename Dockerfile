@@ -1,5 +1,6 @@
 FROM python:3.12-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 DB_PATH=/data/tasks.db
+ARG APP_VERSION=dev
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 DB_PATH=/data/tasks.db APP_VERSION=${APP_VERSION}
 WORKDIR /srv/app
 RUN groupadd --system appuser && useradd --system --gid appuser appuser && mkdir -p /data && chown appuser:appuser /data
 COPY requirements.txt .

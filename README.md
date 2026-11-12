@@ -22,13 +22,19 @@ Ou execute `docker compose up --build` e abra `http://localhost:8080/health`.
 | GET | `/health` | Saúde da aplicação/banco |
 | GET | `/tasks` | Lista tarefas |
 | POST | `/tasks` | Cria tarefa (`{"title":"..."}`) |
+| GET | `/tasks?done=true\|false` | Filtra tarefas por situação (400 se valor inválido) |
 | PATCH | `/tasks/<id>` | Atualiza conclusão (`{"done":true}`) |
+| DELETE | `/tasks/<id>` | Exclui tarefa (204 se excluída, 404 se não existe) |
+| GET | `/version` | Versão implantada (SHA do commit da imagem) |
 
 Exemplos:
 ```bash
 curl http://localhost:8080/health
 curl -X POST http://localhost:8080/tasks -H 'Content-Type: application/json' -d '{"title":"Minha tarefa"}'
 curl http://localhost:8080/tasks
+curl "http://localhost:8080/tasks?done=false"
+curl -i -X DELETE http://localhost:8080/tasks/1
+curl http://localhost:8080/version
 ```
 
 ## Configuração AWS + GitHub

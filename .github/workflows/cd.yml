@@ -1,4 +1,7 @@
 name: CD - deploy EC2
+# Deploy roda num runner auto-hospedado instalado na propria EC2:
+# nao ha SSH de entrada vindo do GitHub, entao a porta 22 fica fechada
+# (acesso administrativo via AWS Systems Manager Session Manager).
 on:
   workflow_run:
     workflows: ["CI - tests and image"]
@@ -6,39 +9,28 @@ on:
     branches: [main]
 permissions:
   contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 jobs:
   deploy:
     # Only successful CI runs started by pushes to main.
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ec2]
     environment: production
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
-      - name: Set up SSH credentials and verify host identity
-        env:
-          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
-        run: |
-          test -n "$SSH_KEY" && test -n "$KNOWN_HOSTS"
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
       - name: Deploy immutable image
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ vars.EC2_USER }}
           DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:${DEPLOY_SHA}"
-          test -n "$EC2_HOST" && test -n "$EC2_USER"
-          # Expected values are host/user, not arbitrary SSH options.
-          [[ "$EC2_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
-          [[ "$EC2_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "${EC2_USER}@${EC2_HOST}"             "bash -s -- '${IMAGE}'" < scripts/deploy.sh
-      - name: Verify remote endpoint
+          bash scripts/deploy.sh "$IMAGE"
+      - name: Verify health and deployed version
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-        run: curl --fail --show-error --retry 10 --retry-delay 3 "http://${EC2_HOST}/health"
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          curl --fail --show-error --retry 10 --retry-delay 3 --retry-all-errors http://127.0.0.1/health
+          curl --fail --silent http://127.0.0.1/version | tee /dev/stderr | grep -q "$DEPLOY_SHA"
