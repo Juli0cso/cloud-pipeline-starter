@@ -9,3 +9,5 @@ __pycache__/
 # arquivos de apoio locais (nao versionar)
 *.patch
 _GUIA_ENTREGA.md
+Claude outputs/
+Entrega-*.pdf

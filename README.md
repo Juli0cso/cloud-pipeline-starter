@@ -1,9 +1,9 @@
 # Cloud Tasks API — Projeto Final de Computação em Nuvem
 
-**Integrante:** Júlio César Sousa Oliveira — matrícula 22308014 (trabalho individual)
+**Integrante:** Júlio César Sousa Oliveira — matrícula 22308014
 
 **Aplicação:** http://3.95.57.206/health · [Relatório](docs/RELATORIO.md) · [PR #1](https://github.com/Juli0cso/cloud-pipeline-starter/pull/1)
-> O IP público muda quando o AWS Academy Learner Lab é reiniciado; o IP vigente está no relatório.
+> Os recursos da AWS foram encerrados em 12/11/2026 após a validação (ver seção 9 do relatório); a aplicação não está mais no ar.
 
 Aplicação Flask/SQLite preparada para um laboratório de **CI/CD com GitHub Actions, Docker, GHCR e AWS EC2**. A base contém código, testes e workflows; cabe ao grupo aprovisionar a nuvem, configurar segredos, usar branches/PRs, implementar uma evolução funcional e comprovar a esteira.
 

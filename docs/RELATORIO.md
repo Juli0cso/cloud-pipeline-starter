@@ -3,13 +3,13 @@
 ## 1. Integrantes e distribuição de tarefas
 | Nome | Matrícula | Responsabilidades |
 |---|---|---|
-| Júlio César Sousa Oliveira | 22308014 | Trabalho individual: repositório, CI, infraestrutura EC2, CD, endpoints/testes, relatório |
+| Júlio César Sousa Oliveira | 22308014 | Repositório, CI, infraestrutura EC2, CD, endpoints/testes, relatório |
 
 ## 2. Links
 | Item | Link |
 |---|---|
 | Repositório | https://github.com/Juli0cso/cloud-pipeline-starter |
-| Aplicação | http://3.95.57.206/health · `/tasks` · `/version` (IP do Learner Lab; muda se o lab reiniciar) |
+| Aplicação | http://3.95.57.206/health · `/tasks` · `/version` (desativada em 12/11/2026 após o encerramento dos recursos, ver seção 9) |
 | Pull Request | https://github.com/Juli0cso/cloud-pipeline-starter/pull/1 |
 | CI no PR (testes + build, sem publicar) | https://github.com/Juli0cso/cloud-pipeline-starter/actions/runs/43231358141 |
 | CI na main (publicação GHCR) | https://github.com/Juli0cso/cloud-pipeline-starter/actions/runs/43231693591 |
@@ -140,9 +140,20 @@ Capturas em `docs/evidencias/` (12/11/2026):
 | IPv4 público | ~US$ 0,005/h | enquanto alocado |
 | GHCR (pacote público) | gratuito | |
 
-Gasto registrado no Learner Lab em 12/11/2026, após os dois deploys: **US$ 0,4 de US$ 50** (`docs/evidencias/10-learner-lab-custo.jpg`). _Atualizar no encerramento._ O Learner Lab desliga a instância ao fim de cada sessão de 4 h.
+Gasto total no Learner Lab: **US$ 0,4 de US$ 50** de crédito (todo o trabalho, incluindo 3 deploys).
+![Custo final](evidencias/12-custo-final.png)
 
-**Encerramento (após a apresentação):** terminar a instância `i-0c813c3c1f54eeba0` (EBS com *DeleteOnTermination*), excluir o Security Group `cloud-tasks-sg`, remover o runner em *Settings → Actions → Runners*. _[print do console sem recursos]_
+### Encerramento dos recursos (12/11/2026, 15:28 UTC)
+Executado pelo AWS CLI no CloudShell:
+```
+aws ec2 terminate-instances --instance-ids i-0c813c3c1f54eeba0   # EBS apagado junto (DeleteOnTermination)
+aws ec2 wait instance-terminated --instance-ids i-0c813c3c1f54eeba0
+aws ec2 delete-security-group --group-id sg-09c5de5c11494269d    # cloud-tasks-sg
+```
+Verificação após o encerramento: instância `cloud-tasks-api` em estado **terminated**, `cloud-tasks-sg` não existe mais, **nenhum volume EBS** e **nenhum IP elástico** na conta. Os grupos `default` e `SG-B` restantes já existiam no Learner Lab e não foram criados por este trabalho.
+![Recursos encerrados](evidencias/11-recursos-encerrados.png)
+
+O runner `ec2-cloud-tasks` foi removido em *Settings → Actions → Runners*. A aplicação deixou de estar acessível no IP 3.95.57.206; código, histórico de PRs, runs, imagens no GHCR e evidências continuam no GitHub.
 
 ## 10. Dificuldades e soluções
 - **SSH a partir do runner hospedado:** sem IP fixo, exigiria porta 22 aberta para todos. Solução: runner auto-hospedado na EC2 + Session Manager.
