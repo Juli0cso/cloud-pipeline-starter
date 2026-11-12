@@ -1,6 +1,6 @@
 # Cloud Tasks API — Projeto Final de Computação em Nuvem
 
-**Integrante:** Júlio César Sousa — matrícula: _preencher_ (trabalho individual)
+**Integrante:** Júlio César Sousa Oliveira — matrícula 22308014 (trabalho individual)
 
 **Aplicação:** http://3.95.57.206/health · [Relatório](docs/RELATORIO.md) · [PR #1](https://github.com/Juli0cso/cloud-pipeline-starter/pull/1)
 > O IP público muda quando o AWS Academy Learner Lab é reiniciado; o IP vigente está no relatório.
