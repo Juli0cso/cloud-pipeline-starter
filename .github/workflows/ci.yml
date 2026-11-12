@@ -50,3 +50,4 @@ jobs:
           context: .
           push: true
           tags: ${{ env.IMAGE_REF }}
+          build-args: APP_VERSION=${{ github.sha }}
