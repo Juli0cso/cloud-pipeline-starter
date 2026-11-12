@@ -1,9 +1,14 @@
 # Cloud Tasks API — Projeto Final de Computação em Nuvem
 
+**Integrante:** Júlio César Sousa — matrícula: _preencher_ (trabalho individual)
+
+**Aplicação:** http://3.95.57.206/health · [Relatório](docs/RELATORIO.md) · [PR #1](https://github.com/Juli0cso/cloud-pipeline-starter/pull/1)
+> O IP público muda quando o AWS Academy Learner Lab é reiniciado; o IP vigente está no relatório.
+
 Aplicação Flask/SQLite preparada para um laboratório de **CI/CD com GitHub Actions, Docker, GHCR e AWS EC2**. A base contém código, testes e workflows; cabe ao grupo aprovisionar a nuvem, configurar segredos, usar branches/PRs, implementar uma evolução funcional e comprovar a esteira.
 
 ## Arquitetura
-`Branch/PR -> CI (pytest + Docker build) -> merge main -> CI (publicação GHCR por SHA) -> CD (SSH EC2 + docker pull/run) -> /health`
+`Branch/PR -> CI (pytest + Docker build) -> merge main -> CI (publicação GHCR por SHA) -> CD (runner auto-hospedado na EC2: docker pull/run) -> /health + /version`
 
 ## Rodar localmente
 ```bash
